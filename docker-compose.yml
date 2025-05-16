@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  userservice:
+    build:
+      context: .
+      dockerfile: UserService/Dockerfile
+    environment:
+      - ConnectionStrings__PostgresDb=${POSTGRES_CONNECTION_STRING}
+    ports:
+      - "5000:80"
+
+  productservice:
+    build:
+      context: .
+      dockerfile: ProductService/Dockerfile
+    environment:
+      - ConnectionStrings__PostgresDb=${POSTGRES_CONNECTION_STRING}
+    ports:
+      - "5001:80"
+
+  orderservice:
+    build:
+      context: .
+      dockerfile: OrderService/Dockerfile
+    environment:
+      - ConnectionStrings__PostgresDb=${POSTGRES_CONNECTION_STRING}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - SqsQueueUrl=${SQS_QUEUE_URL}
+    ports:
+      - "5003:80"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - REACT_APP_PRODUCT_SERVICE_URL=http://productservice:80
+      - REACT_APP_ORDER_SERVICE_URL=http://orderservice:80
+    ports:
+      - "3000:80"
+    depends_on:
+      - productservice
+      - orderservice
